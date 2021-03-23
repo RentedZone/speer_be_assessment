@@ -27,73 +27,73 @@ This is the first time I've used an API so it was interesting to see how I can q
 
 
 ## Sample User
-name:       DavidAddison
-password:   123456
-email:      test@email.com
+name:       DavidAddison  
+password:   123456  
+email:      test@email.com  
 
 ## Sample Queries on PostMan (http://localhost:3000/api/user/)
 ### POST '/register' (create a new account in the database)
-{
-  "name"      : "myNewUsername",
-  "password"  : "myNewHashedPassword",
-  "email"     : "myNewEmail"
-}
+{  
+  "name"      : "myNewUsername",  
+  "password"  : "myNewHashedPassword",  
+  "email"     : "myNewEmail"  
+}  
 
 ### POST '/login' (registering for an account will have already logged you in)
-{
-  "name"          : "myUsername",
-  "password"      : "myPassword"
-}
+{  
+  "name"          : "myUsername",  
+  "password"      : "myPassword"  
+}  
 
 ### POST '/resetPassword' (would normally send an email, instead sends new password as a response) (also, this resets the password no matter what, which is obviously flawed)
-{
-  "email":        : "myEmail" 
-}
+{  
+  "email":        : "myEmail"   
+}  
 
 ### POST '/changePassword' (allows you to modifying an existing password)
-{
-  "password"        : "myNewPassword",
-  "passwordRetyped" : "myNewPassword",
-  "oldPassword"     : "myOldPassword"
-}
+{  
+  "password"        : "myNewPassword",  
+  "passwordRetyped" : "myNewPassword",  
+  "oldPassword"     : "myOldPassword"  
+}  
 
 ### POST '/logout' (logs you out, assuming you're currently logged in)
 
 ### POST '/buy-shares'
-{
-  "shareID"          : "theShareIWant",
-  "shares"           : "theAmoutIWant",
-  "cost"             : "theCostOfShare"
-}
+{  
+  "shareID"          : "theShareIWant",  
+  "shares"           : "theAmoutIWant",  
+  "cost"             : "theCostOfShare"  
+}  
 
 ### POST '/sell-shares'
-{
-  "shareID"           : "theShareImSelling",
-  "amount"            : "theAmountIWantToSell",
-  "price"             : "thePriceIWantToSellFor"
-}
+{  
+  "shareID"           : "theShareImSelling",  
+  "amount"            : "theAmountIWantToSell",  
+  "price"             : "thePriceIWantToSellFor"  
+}  
 
-### POST '/add-funds'
-{
-  "amount"            : "theAmountOfMoney"
-}
+### POST '/add-funds' 
+{  
+  "amount"            : "theAmountOfMoney"  
+}  
 
 ### POST '/withdraw-funds'
-{
-  "amount"            : "theAmountOfMoney"
-}
+{  
+  "amount"            : "theAmountOfMoney"  
+}  
 
 ### GET '/portfolio' (returns the purchased shares of the user that is logged in)
 
 ### POST '/subscribe-to-stock'
-{
-  "ticker"            : "tickerOfStock"
-}
+{  
+  "ticker"            : "tickerOfStock"  
+}  
 
 ### POST '/unsubscribe-from-stock'
-{
-  "ticker"            : "tickerOfStock"
-}
+{  
+  "ticker"            : "tickerOfStock"    
+}  
 
 ### GET '/subscribed-stocks' (returns the stocks that the user is subscribed to)
 
