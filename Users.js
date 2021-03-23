@@ -29,6 +29,10 @@ const UserSchema = new Schema({
         shares: {
             type: Array,
             default: []
+        },
+        subscriptions: {
+            type: Array,
+            default: []
         }
     }, {timestamps: true});
 

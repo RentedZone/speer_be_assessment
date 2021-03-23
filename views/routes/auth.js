@@ -2,6 +2,9 @@ const router = require('express').Router();
 const {UserModel} = require('../../Users');
 const {registrationValidation, loginValidation} = require('../../validation');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
+const fetch = require("node-fetch");
+const jQuery = require('jquery');
 
 // Register account
 router.post('/register', async (req, res) => {
@@ -125,15 +128,18 @@ router.post("/buy-shares", async (req, res) => {
         if(await canAffordShares(user.balance, shares, cost)) {
             let index = await ownsShare(shareID, user.shares);
             if(index !== -1) {
-                UserModel.updateOne(
+                await UserModel.findOneAndUpdate(
                     {name: user.name},
-                    {$set: {[`shares.$[outer].${shares}`]: (parseInt(user.shares[index].shares) + parseInt(shares))}},
-                    {"arrayFilters": [{"outer.id": shareID}]}
+                    {$set: {[`shares.$[outer].${'shares'}`]: (parseInt(user.shares[index].shares) + parseInt(shares))}},
+                    {"arrayFilters": [{"outer.id": shareID}]},
+                    (err) => {
+                        if(err) console.log(err);
+                    }
                 );
             } else {
                 let newShare = {"id": shareID, "shares": shares};
 
-                UserModel.updateOne(
+                await UserModel.updateOne(
                     {name: user.name},
                     {$push: {shares: newShare}}
                 );
@@ -152,17 +158,22 @@ router.post("/sell-shares", async (req, res) => {
         if(amount < 1) return res.status(400).send("You must enter a valid number of shares to sell.");
         let index = await hasEnoughShares(shareID, amount, user.shares);
         if(index !== -1) {
-            if(user.shares[index].shares === amount) {
-                UserModel.updateOne(
+            if(user.shares[index].shares == amount) {
+                await UserModel.findOneAndUpdate(
                     {name: user.name},
-                    {$pull: {[`shares.$[outer]`]: shareID}},
-                    {"arrayFilters": [{"outer.id": shareID}]}
+                    {$pull: {shares : {id : shareID}}},
+                    (err) => {
+                        if(err) console.log(err);
+                    }
                 );
             } else {
-                UserModel.updateOne(
+                await UserModel.findOneAndUpdate(
                     {name: user.name},
                     {$set: {[`shares.$[outer].${'shares'}`]: (parseInt(user.shares[index].shares) - parseInt(amount))}},
-                    {"arrayFilters": [{"outer.id": shareID}]}
+                    {"arrayFilters": [{"outer.id": shareID}]},
+                    (err) => {
+                        if(err) console.log(err);
+                    }
                 );
             }
             user.balance += amount * price;
@@ -203,10 +214,62 @@ router.get("/portfolio", async (req, res) => {
     } else return res.status(400).send("You must be logged in to see your portfolio.");
 });
 
+router.post("/subscribe-to-stock", cors(), async (req, res) => {
+    const user = await UserModel.findOne({_id: req.session.userId});
+    if(user) {
+        const {ticker} = req.body;
+        const request = await fetch ( `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${process.env.VANTAGE_KEY}`);
+
+        const stockData = await request.json();
+        if(Object.keys(stockData["Global Quote"]).length === 0) return res.status(400).send("Something went wrong. Please ensure you entered the correct ticker.");
+        else {
+            await UserModel.findOneAndUpdate(
+                {name: user.name},
+                {$push: {subscriptions: ticker}}
+            );
+            await user.save();
+            return res.status(200).send("You have successfully subscribed to ticker: " + ticker);
+        }
+    } return res.status(400).send("You must be logged in to subscribe to tickers.");
+});
+
+router.post("/unsubscribe-from-stock", async (req, res) => {
+    const user = await UserModel.findOne({_id: req.session.userId});
+    if(user) {
+        const {ticker} = req.body;
+
+        for(let i = 0; i < user.subscriptions.length; i++) {
+            if(user.subscriptions[i] === ticker) {
+                await UserModel.findOneAndUpdate(
+                    {name: user.name},
+                    {$pull: {subscriptions: ticker}}
+                );
+                await user.save();
+                return res.status(200).send("Successfully unsubscribed to :" + ticker);
+            }
+        }
+        return res.status(400).send("You are not subscribed to :" + ticker);
+    } else return res.status(400).send("You must be logged in to unsubscribe.");
+});
+
+router.get("/subscribed-stocks", cors(), async(req, res) => {
+    const user = await UserModel.findOne({_id: req.session.userId});
+    if(user) {
+        let data = [];
+        for(let i = 0; i < user.subscriptions.length; i++){
+            let request = await fetch ( `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${user.subscriptions[i]}&apikey=${process.env.VANTAGE_KEY}`);
+            let ticker = user.subscriptions[i];
+            let stockData = await request.json();
+            if(Object.keys(stockData["Global Quote"]).length === 0) data.push({"Error": "Error, something went wrong.","Ticker" : ticker});
+            else data.push(stockData);
+        }
+        return res.status(200).send(data);
+    } return res.status(400).send("You must be logged in to subscribe to tickers.");
+});
 
 // FOR ASSESSMENT USE ONLY (NO NEED IF THIS WAS REAL)
 router.get("/users", async (req, res) => {
-    const users = await UserModel.find({});
+    const users = await UserModel.find({}, '_id balance shares name email subscriptions');
     if(users) return res.status(200).send(users);
     return res.status(400).send("No users in this database.");
 });
