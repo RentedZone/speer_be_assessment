@@ -10,6 +10,7 @@ This is my submission for an interview @ Speer Technologies. Hours spent: 6hrs
 - Seeing information regarding all subscribed stocks (API)
 - Seeing all users in the database, along with SOME of their information
 - See your portfolio of "purchased" stocks
+- MongoDB Atlas + Mongoose for Schemas
 
 ## Improvements
 My buy/sell stock requests could have benefited from actually using the API, but I ran out of time. Realistically, instead of the user choosing the cost/sell price, it would be collected through the use of the API. It would also confirm that the stocks exist.
